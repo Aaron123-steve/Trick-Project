@@ -1,0 +1,594 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 性格识别实验室</title>
+  <meta name="description" content="一份看起来很专业、实际上很整蛊的 AI 性格测试。" />
+  <style>
+    :root {
+      --bg-1: #f3f6ff;
+      --bg-2: #d6f7ff;
+      --card: #ffffffcc;
+      --text: #1a2740;
+      --accent: #0066ff;
+      --accent-2: #00b894;
+      --danger: #ff4d4f;
+      --shadow: 0 14px 40px rgba(0, 53, 128, 0.16);
+      --radius-xl: 24px;
+      --radius-lg: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 20%, #ffffff 0%, transparent 32%),
+        radial-gradient(circle at 85% 8%, #d0ffef 0%, transparent 30%),
+        linear-gradient(140deg, var(--bg-1), var(--bg-2));
+      padding: 24px;
+    }
+
+    .wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      animation: fadeIn 0.8s ease;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #ffffffc7;
+      border: 1px solid #dce9ff;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 14px;
+      backdrop-filter: blur(8px);
+    }
+
+    .card {
+      margin-top: 16px;
+      background: var(--card);
+      border: 1px solid #d6e5ff;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      padding: 28px;
+    }
+
+    h1 {
+      margin: 8px 0 10px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.1;
+      letter-spacing: 0.4px;
+    }
+
+    p {
+      margin: 0;
+      line-height: 1.65;
+      color: #3b4f77;
+    }
+
+    .invite {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #e7f0ff;
+      border: 1px dashed #8ab3ff;
+      font-weight: 600;
+      display: none;
+    }
+
+    .field {
+      margin-top: 20px;
+      display: grid;
+      gap: 10px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #29406a;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 15px;
+      border-radius: 12px;
+      border: 1px solid #bcd4ff;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px #0066ff22;
+    }
+
+    .actions {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      padding: 12px 18px;
+      font-size: 15px;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary {
+      background: linear-gradient(135deg, #0059ff, #00a8ff);
+      color: #fff;
+      box-shadow: 0 8px 18px #0059ff33;
+    }
+
+    .secondary {
+      background: #ecf3ff;
+      color: #2354a3;
+      border: 1px solid #c5d9ff;
+    }
+
+    .ghost {
+      background: #f3fff8;
+      color: #17785f;
+      border: 1px solid #b9f0de;
+    }
+
+    #quiz,
+    #loading,
+    #result {
+      display: none;
+    }
+
+    .progress {
+      margin: 16px 0 20px;
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      background: #dce8ff;
+      overflow: hidden;
+    }
+
+    .bar {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #0066ff, #00c4ff);
+      transition: width 0.35s ease;
+    }
+
+    .q-text {
+      font-size: clamp(20px, 3vw, 28px);
+      margin-bottom: 16px;
+      font-weight: 800;
+      line-height: 1.35;
+      color: #1a315f;
+    }
+
+    .opts {
+      display: grid;
+      gap: 10px;
+    }
+
+    .opt {
+      width: 100%;
+      text-align: left;
+      background: #f8fbff;
+      color: #1f427f;
+      border: 1px solid #cfe0ff;
+      padding: 14px;
+    }
+
+    .opt:hover {
+      border-color: #81aaff;
+      box-shadow: 0 6px 14px rgba(0, 80, 210, 0.14);
+    }
+
+    .loading-box {
+      text-align: center;
+      padding: 6px 0;
+    }
+
+    .pulse {
+      width: 94px;
+      height: 94px;
+      margin: 8px auto 12px;
+      border-radius: 50%;
+      border: 6px solid #cfe2ff;
+      border-top-color: #007bff;
+      animation: spin 1s linear infinite;
+    }
+
+    .loading-line {
+      margin-top: 10px;
+      font-weight: 600;
+      min-height: 26px;
+      color: #2e4f89;
+    }
+
+    .report {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      background: #f8fbff;
+      border: 1px solid #d8e5ff;
+    }
+
+    .headline {
+      margin: 4px 0 10px;
+      font-size: clamp(26px, 3.6vw, 36px);
+      font-weight: 900;
+      color: #0d2d74;
+    }
+
+    .tag {
+      display: inline-block;
+      border-radius: 999px;
+      background: #fff3cf;
+      border: 1px solid #ffd45a;
+      color: #835700;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .metric {
+      background: #fff;
+      border: 1px solid #dbe8ff;
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .metric b {
+      display: block;
+      font-size: 18px;
+      color: #153774;
+      margin-bottom: 2px;
+    }
+
+    .hint {
+      margin-top: 14px;
+      color: #38588f;
+      font-size: 14px;
+    }
+
+    .foot {
+      margin-top: 12px;
+      color: #4c6392;
+      font-size: 13px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%) translateY(20px);
+      background: #1a2f5c;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      opacity: 0;
+      transition: all 0.28s ease;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 16px;
+      }
+
+      .card {
+        padding: 20px;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="badge">AI-CERT 心理建模中心 · 愚人节限定</div>
+
+    <section class="card" id="intro">
+      <h1>AI 性格识别实验室</h1>
+      <p>本系统基于「多维语义画像模型」进行快速人格推断，仅需 6 题即可生成专业报告。</p>
+      <div class="invite" id="inviteBox"></div>
+
+      <div class="field">
+        <label for="name">你的昵称</label>
+        <input id="name" type="text" maxlength="24" placeholder="例如：小明" />
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="startBtn">开始检测</button>
+        <button class="secondary" id="shareBtn">生成整蛊链接</button>
+      </div>
+      <p class="hint"></p>
+    </section>
+
+    <section class="card" id="quiz">
+      <p id="progressLabel">第 1 题 / 共 6 题</p>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+      <div class="q-text" id="qText"></div>
+      <div class="opts" id="opts"></div>
+    </section>
+
+    <section class="card" id="loading">
+      <div class="loading-box">
+        <div class="pulse"></div>
+        <h2>正在构建你的 AI 性格模型...</h2>
+        <p class="loading-line" id="loadingLine">读取行为特征中...</p>
+      </div>
+    </section>
+
+    <section class="card" id="result">
+      <div class="tag">分析完毕 · 可信度 99.97%</div>
+      <p>受测者：<strong id="rName">你</strong></p>
+      <h2 class="headline" id="title"></h2>
+      <p id="desc"></p>
+
+      <div class="report">
+        <strong>AI 专业结论</strong>
+        <p id="punch" style="margin-top: 6px;"></p>
+
+        <div class="metrics">
+          <div class="metric"><b id="m1">-</b>愚人节防骗值</div>
+          <div class="metric"><b id="m2">-</b>一本正经上当率</div>
+          <div class="metric"><b id="m3">-</b>被忽悠可爱指数</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="ghost" id="againBtn">再测一次</button>
+        <button class="secondary" id="copyBtn">复制结果文案</button>
+      </div>
+      <p class="foot">彩蛋：其实无论你怎么选，今天都会被判定为「容易被一本正经忽悠的人」。愚人节快乐。</p>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const questions = [
+      {
+        text: "你收到一条“紧急通知：请立即查看”的消息，你会？",
+        options: ["第一时间点开", "先看是谁发的", "转给朋友问真假"]
+      },
+      {
+        text: "看到“限时免费领取”，你通常会？",
+        options: ["先领再说", "看看规则细节", "怀疑但还是点开"]
+      },
+      {
+        text: "朋友说他用 AI 预测了你的命运，你会？",
+        options: ["认真听完", "边笑边听", "让他发链接给我"]
+      },
+      {
+        text: "你更相信哪种“专业感”？",
+        options: ["图表特别多", "术语听不懂", "有进度条和加载动画"]
+      },
+      {
+        text: "如果网页显示“准确率 99.97%”，你会？",
+        options: ["感觉很厉害", "觉得有点夸张", "截屏发群里"]
+      },
+      {
+        text: "今天是 4 月 1 日，你打开这个页面的心态是？",
+        options: ["认真测试", "半信半疑", "我就是来看热闹"]
+      }
+    ];
+
+    let current = 0;
+    const picks = [];
+
+    const intro = document.getElementById("intro");
+    const quiz = document.getElementById("quiz");
+    const loading = document.getElementById("loading");
+    const result = document.getElementById("result");
+
+    const progressLabel = document.getElementById("progressLabel");
+    const bar = document.getElementById("bar");
+    const qText = document.getElementById("qText");
+    const opts = document.getElementById("opts");
+
+    const nameInput = document.getElementById("name");
+    const inviteBox = document.getElementById("inviteBox");
+
+    const startBtn = document.getElementById("startBtn");
+    const shareBtn = document.getElementById("shareBtn");
+    const copyBtn = document.getElementById("copyBtn");
+    const againBtn = document.getElementById("againBtn");
+
+    const rName = document.getElementById("rName");
+    const title = document.getElementById("title");
+    const desc = document.getElementById("desc");
+    const punch = document.getElementById("punch");
+    const m1 = document.getElementById("m1");
+    const m2 = document.getElementById("m2");
+    const m3 = document.getElementById("m3");
+
+    const toast = document.getElementById("toast");
+
+    const inviteFrom = new URLSearchParams(window.location.search).get("invite");
+    if (inviteFrom) {
+      inviteBox.style.display = "block";
+      inviteBox.textContent = `${inviteFrom} 邀请你来做这份 AI 性格测试`;
+    }
+
+    function showToast(text) {
+      toast.textContent = text;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1600);
+    }
+
+    function safeName() {
+      return nameInput.value.trim().slice(0, 24) || "你";
+    }
+
+    function renderQuestion() {
+      const total = questions.length;
+      progressLabel.textContent = `第 ${current + 1} 题 / 共 ${total} 题`;
+      bar.style.width = `${(current / total) * 100}%`;
+
+      const q = questions[current];
+      qText.textContent = q.text;
+      opts.innerHTML = "";
+
+      q.options.forEach((text, idx) => {
+        const b = document.createElement("button");
+        b.className = "opt";
+        b.textContent = `${String.fromCharCode(65 + idx)}. ${text}`;
+        b.addEventListener("click", () => {
+          picks.push(idx);
+          current += 1;
+          if (current < total) {
+            renderQuestion();
+          } else {
+            bar.style.width = "100%";
+            startLoading();
+          }
+        });
+        opts.appendChild(b);
+      });
+    }
+
+    function startTest() {
+      intro.style.display = "none";
+      result.style.display = "none";
+      loading.style.display = "none";
+      quiz.style.display = "block";
+
+      current = 0;
+      picks.length = 0;
+      renderQuestion();
+    }
+
+    function startLoading() {
+      quiz.style.display = "none";
+      loading.style.display = "block";
+
+      const lines = [
+        "读取行为特征中...",
+        "加载微表情语义模型...",
+        "对照 1200 万份愚人节样本...",
+        "准备输出专业结论..."
+      ];
+
+      const loadingLine = document.getElementById("loadingLine");
+      let i = 0;
+      const timer = setInterval(() => {
+        loadingLine.textContent = lines[i] || lines[lines.length - 1];
+        i += 1;
+        if (i > lines.length) {
+          clearInterval(timer);
+          showResult();
+        }
+      }, 800);
+    }
+
+    function pseudoPercent(base, span) {
+      const sum = picks.reduce((a, b) => a + b, 0);
+      const n = (sum * 17 + safeName().length * 11) % span;
+      return `${base + n}%`;
+    }
+
+    function showResult() {
+      loading.style.display = "none";
+      result.style.display = "block";
+
+      const n = safeName();
+      rName.textContent = n;
+
+      title.textContent = "你是：一本正经忽悠易感型";
+      desc.textContent = `${n}，你的“专业名词信任度”与“加载动画信服度”显著偏高。简单说：越像真的，你越容易笑着相信。`;
+      punch.textContent = "系统已确认：你今天的核心人格标签是“容易被一本正经忽悠，但心态很好”。建议把本页转发给朋友一起测，看看谁最先上当。";
+
+      m1.textContent = pseudoPercent(8, 13);
+      m2.textContent = pseudoPercent(83, 14);
+      m3.textContent = pseudoPercent(90, 10);
+    }
+
+    function buildShareLink() {
+      const n = encodeURIComponent(safeName());
+      const url = `${window.location.origin}${window.location.pathname}?invite=${n}`;
+      return url;
+    }
+
+    async function copyText(text, okText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast(okText);
+      } catch (_) {
+        const area = document.createElement("textarea");
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        document.body.removeChild(area);
+        showToast(okText);
+      }
+    }
+
+    startBtn.addEventListener("click", startTest);
+
+    shareBtn.addEventListener("click", async () => {
+      const link = buildShareLink();
+      await copyText(link, "整蛊链接已复制");
+    });
+
+    againBtn.addEventListener("click", () => {
+      result.style.display = "none";
+      intro.style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      const text = `我刚做了一个 AI 性格识别，结果是「一本正经忽悠易感型」😂\n你也测测：${buildShareLink()}`;
+      await copyText(text, "结果文案已复制");
+    });
+  </script>
+</body>
+</html>
